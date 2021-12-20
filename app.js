@@ -10,7 +10,13 @@ document.addEventListener('DOMContentLoaded' , ()=>{
     let platforms = [];
     let upTimerId
     let downTimerId
+    let leftTimerId
+    let rightTimerId
     let isJumping = true
+    let isGoingLeft = false
+    let isGoingRight = false
+    let score = 0
+
 
     function createDoodler(){
         grid.appendChild(doodler);
@@ -40,7 +46,6 @@ document.addEventListener('DOMContentLoaded' , ()=>{
             let newPlatformBottom = 100 + i * platformGap
             let newPlatform = new Platform(newPlatformBottom);
             platforms.push(newPlatform);
-            console.log(platforms)
         }
     }
 
@@ -50,6 +55,15 @@ document.addEventListener('DOMContentLoaded' , ()=>{
                 p.bottom -=4;
                 let visual = p.visual
                 visual.style.bottom = p.bottom +'px'
+
+                if(p.bottom < 10){
+                    let firstPlatform = platforms[0].visual
+                    firstPlatform.classList.remove('platform')
+                    platforms.shift()
+                    score++
+                    let newPlatform = new Platform(600)
+                    platforms.push(newPlatform)
+                }
             })
         }
     }
@@ -96,19 +110,60 @@ document.addEventListener('DOMContentLoaded' , ()=>{
     function gameOver(){
         console.log('game over')
         isGameOver = true;
+        while(grid.firstChild){
+         grid.removeChild(grid.firstChild)   
+        }
+        grid.innerHTML = score
+        clearInterval(rightTimerId)
+        clearInterval(leftTimerId)
         clearInterval(upTimerId)
         clearInterval(downTimerId)
+
     }
 
-    // function moveLeft(){}
+    function moveLeft(){
+        if(isGoingRight){
+            clearInterval(rightTimerId)
+            isGoingRight =false
+        }
+        isGoingLeft =true
+        leftTimerId = setInterval(function(){
+            if(doodlerLeftSpace >=0){
+                doodlerLeftSpace -=5
+                doodler.style.left = doodlerLeftSpace +'px';
+            }else{ moveRight()}
+        },30)
+    }
 
-    function control(){
-        if(e.key === "ArrowLeft"){
-            //move left
-        }else if (e.key === "arrowRigth"){
-            //move right
-        }else if(e.key ==="ArrowUp"){
-            //move straight
+    function moveRight(){
+        if(isGoingLeft){
+            clearInterval(leftTimerId)
+            isGoingLeft =false
+        }
+        isGoingRight =true
+        rightTimerId = setInterval(function(){
+            if(doodlerLeftSpace <= 340){
+                doodlerLeftSpace +=5
+                doodler.style.left = doodlerLeftSpace +'px';
+            }else{ moveLeft()}
+        },30)
+    }
+
+    function moveStraight(){
+            clearInterval(leftTimerId)
+            clearInterval(rightTimerId)
+            isGoingLeft =false
+            isGoingRight =false
+    }
+
+    function control(e){
+        console.log(e.key)
+        if(e.key === 'ArrowLeft'){
+            moveLeft()
+        }else if (e.key === 'ArrowRight'){
+            moveRight()
+        }else if(e.key ==='ArrowUp'){
+            moveStraight()
         }
     }
 
@@ -118,6 +173,7 @@ document.addEventListener('DOMContentLoaded' , ()=>{
             createDoodler();
             setInterval(movePlatforms, 30);
             jump(startingPoint)
+            document.addEventListener('keyup', control)
         }
     }
     //create a button for this 
